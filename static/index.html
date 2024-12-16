@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Listing</title>
+    <style>
+        @font-face {
+            font-family: 'Avenir-Book';
+            src: url(fonts/Avenir/Avenir-Book.ttf) format('truetype');
+        }
+        @font-face {
+            font-family: 'Montserrat-Regular';
+            src: url(fonts/Montserrat/Montserrat-Regular.ttf) format('truetype');
+        }
+        @font-face {
+            font-family: 'Montserrat-Medium';
+            src: url(fonts/Montserrat/Montserrat-Medium.otf) format('truetype');
+        }
+
+        body {
+            font-family: 'Avenir', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f8f8f8;
+        }
+        header {
+            font-family: 'Avenir-Book', sans-serif;
+            background-color: #f8f8f8;
+            color: black;
+            padding: 15px 0;
+            text-align: center;
+            font-size: 45px;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .carousel-wrapper {
+            position: relative;
+            overflow-x: scroll;
+            display: flex;
+            gap: 15px;
+            padding-bottom: 10px;
+        }
+        .carousel-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+        .carousel-wrapper::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 10px;
+        }
+        .carousel-wrapper::-webkit-scrollbar-track {
+            background-color: #f1f1f1;
+            border-radius: 10px;
+        }
+        .carousel {
+            display: flex;
+            gap: 15px;
+        }
+        .product-card {
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 290px; /* Adjust size for 4 products on screen */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .product-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-size: cover;
+            background-position: center;
+        }
+        .product-info {
+            padding: 15px;
+            text-align: center;
+        }
+        .product-name {
+            font-family: 'Montserrat-Medium', sans-serif;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+        .product-price {
+            font-family: 'Montserrat-Regular', sans-serif;
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .color-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .rating {
+            font-family: 'Avenir-Book', sans-serif;
+            font-size: 14px;
+            color: #777;
+            margin-top: 10px;
+        }
+        /* Arrow styles */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 24px;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .arrow-left {
+            left: -40px; /* Move the arrow outside the container */
+        }
+        .arrow-right {
+            right: -40px; /* Move the arrow outside the container */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Product List
+    </header>
+
+    <div class="container">
+        <div class="arrow arrow-left" id="prevArrow">&#8592;</div>
+        <div class="carousel-wrapper" id="carouselWrapper">
+            <div class="carousel" id="carousel">
+                <!-- Product cards will be dynamically inserted here -->
+            </div>
+        </div>
+        <div class="arrow arrow-right" id="nextArrow">&#8594;</div>
+    </div>
+
+    <script>
+        const productsEndpoint = 'http://127.0.0.1:5000/products';
+
+        let currentIndex = 0;
+
+        async function fetchProducts() {
+            const response = await fetch(productsEndpoint);
+            const products = await response.json();
+            displayProducts(products);
+        }
+
+        function displayProducts(products) {
+            const carousel = document.getElementById('carousel');
+            carousel.innerHTML = '';
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.classList.add('product-card');
+
+                // Default to yellow image
+                const productImage = document.createElement('div');
+                productImage.classList.add('product-image');
+                productImage.style.backgroundImage = `url(${product.images.yellow})`;
+
+                const productInfo = document.createElement('div');
+                productInfo.classList.add('product-info');
+
+                const name = document.createElement('div');
+                name.classList.add('product-name');
+                name.textContent = product.name;
+
+                const price = document.createElement('div');
+                price.classList.add('product-price');
+                price.textContent = `$${product.price} USD`;
+
+                const colorOptions = document.createElement('div');
+                colorOptions.classList.add('color-options');
+
+                ['yellow', 'rose', 'white'].forEach(color => {
+                    const colorDot = document.createElement('div');
+                    colorDot.classList.add('color-dot');
+                    colorDot.style.backgroundColor = color === 'yellow' ? '#E6CA97' : color === 'rose' ? '#E1A4A9' : '#D9D9D9';
+                    colorDot.onclick = () => {
+                        productImage.style.backgroundImage = `url(${product.images[color]})`;
+                    };
+                    colorOptions.appendChild(colorDot);
+                });
+
+                const rating = document.createElement('div');
+                rating.classList.add('rating');
+                rating.textContent = `${product.popularityScoreFormatted}/5`;
+
+                productInfo.appendChild(name);
+                productInfo.appendChild(price);
+                productInfo.appendChild(colorOptions);
+                productInfo.appendChild(rating);
+
+                card.appendChild(productImage);
+                card.appendChild(productInfo);
+
+                carousel.appendChild(card);
+            });
+
+            updateCarouselPosition();
+        }
+
+        function updateCarouselPosition() {
+            const carouselWrapper = document.getElementById('carouselWrapper');
+            const carousel = document.getElementById('carousel');
+            const productWidth = document.querySelector('.product-card').offsetWidth + 15;  // Product width + gap
+            const maxScroll = (carouselWrapper.scrollWidth - carouselWrapper.clientWidth); 
+
+            // Move carousel based on the index
+            carousel.style.transform = `translateX(-${currentIndex * productWidth}px)`;
+
+            // Adjust arrow visibility
+            document.getElementById('prevArrow').style.visibility = currentIndex > 0 ? 'visible' : 'hidden';
+            document.getElementById('nextArrow').style.visibility = currentIndex < maxScroll / productWidth ? 'visible' : 'hidden';
+        }
+
+        document.getElementById('prevArrow').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCarouselPosition();
+            }
+        });
+
+        document.getElementById('nextArrow').addEventListener('click', () => {
+            const totalProducts = document.querySelectorAll('.product-card').length;
+            if (currentIndex < totalProducts - 4) {
+                currentIndex++;
+                updateCarouselPosition();
+            }
+        });
+
+        fetchProducts();
+    </script>
+</body>
+</html>
